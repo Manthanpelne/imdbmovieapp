@@ -67,7 +67,7 @@ userRouter.post("/login", async (req, res) => {
         if(result){
             const token = jwt.sign({userID : user._id}, process.env.secretkey, {expiresIn : 20})
             const refresh_token = jwt.sign({userID : user._id}, process.env.secondkey, {expiresIn : 100})
-            res.send({msg : "login successfull", token, refresh_token})
+            res.send({msg : "login successfull", token, user, refresh_token})
         }
         else{
             res.send("login failed")
@@ -93,6 +93,9 @@ userRouter.get("/logout",(req,res)=>{
 const token = req.headers.authorization
 try {
     //client.LPUSH("black",token)
+    const blacklisteddata = JSON.parse(fs.readFileSync("./blacklist.json", "utf-8"))
+    blacklisteddata.push(token)
+    fs.writeFileSync("./blacklist.json", JSON.stringify(blacklisteddata))
     res.send({"msg":"Logged out successfully"})
 } catch (error) {
     console.log(error)
@@ -115,7 +118,6 @@ userRouter.get("/gettoken",(req,res)=>{
             res.send({"msg":"login successfull",token})
         }
       });
-res.send()
 })
 
 
