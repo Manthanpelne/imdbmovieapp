@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken")
 const fs = require("fs")
 require('dotenv').config()
-const redis = require("redis")
+// const redis = require("redis")
 
-const client=redis.createClient()
-client.connect()
+// const client=redis.createClient()
+// client.connect()
 
 
 const authenticate = async(req,res,next)=>{
@@ -14,13 +14,13 @@ if(!token){
 }
 
 //checking is the token  is present in redis.. if present? blacklist it
-const result = await client.lRange('black',0,99999999)
-    if(result.indexOf(token) > -1){
-      return res.status(400).json({
-        status: 400,
-        error: 'Please Login again!!'
-    })
-  }
+// const result = await client.lRange('black',0,99999999)
+//     if(result.indexOf(token) > -1){
+//       return res.status(400).json({
+//         status: 400,
+//         error: 'Please Login again!!'
+//     })
+//   }
 
 
     jwt.verify(token, process.env.secretkey, function(err, decoded) {

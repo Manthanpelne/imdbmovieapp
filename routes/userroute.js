@@ -8,10 +8,10 @@ const jwt = require("jsonwebtoken")
 
 const fs = require("fs")
 require('dotenv').config()
-const redis = require("redis")
+// const redis = require("redis")
 
-const client=redis.createClient()
-client.connect()
+// const client=redis.createClient()
+// client.connect()
 
 userRouter.get("/",(req,res)=>{
     res.send("base api endpoint")
@@ -55,37 +55,25 @@ userRouter.post("/signup",(req,res)=>{
     });
 })
 
-userRouter.post("/login",async(req,res)=>{
-    try {
-        const {email,pass}=req.body
-        const user = await usermodel.findOne({email})
-        if(!user){
-            res.status(400).send({"msg":"please register first"})
-        }
-        const hashpass = user?.pass
-        bcrypt.compare(pass, hashpass, function(err, result) {
-            if(result){
-                try {
-                    const token = jwt.sign(
-                     {userID:user._id,"role":user.role},
-                      "secret",
-                      { expiresIn: "1d" }
-                    );
-                    client.set("counter", token);
+userRouter.post("/login", async (req, res) => {
+    const {email, pass} = req.body;
 
-                    return res.send({"msg":"Login successfull",token: token,user});
-                  } catch (error) {
-                    return res.send(error.message);
-                  }
-            }else{
-                res.status(400).send({"msg":"login failed!!"})
-            }
-        });
-    } catch (error) {
-        console.log(error)
+    const user = await usermodel.findOne({email})
+    if(!user){
+        res.send("Please signup first")
     }
+    const hashedpwd = user?.pass
+    bcrypt.compare(pass, hashedpwd, function(err, result) {
+        if(result){
+            const token = jwt.sign({userID : user._id}, process.env.secretkey, {expiresIn : 20})
+            const refresh_token = jwt.sign({userID : user._id}, process.env.secondkey, {expiresIn : 100})
+            res.send({msg : "login successfull", token, refresh_token})
+        }
+        else{
+            res.send("login failed")
+        }
+    });
 })
-
 
 // userRouter.get("/protected",(req,res)=>{
 //     const token = req.headers.authorization;
@@ -104,7 +92,7 @@ res.send("reports..")
 userRouter.get("/logout",(req,res)=>{
 const token = req.headers.authorization
 try {
-    client.LPUSH("black",token)
+    //client.LPUSH("black",token)
     res.send({"msg":"Logged out successfully"})
 } catch (error) {
     console.log(error)

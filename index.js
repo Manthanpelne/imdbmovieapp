@@ -11,17 +11,16 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 
 require('dotenv').config()
-const redis = require("redis")
+
+// const redis = require("redis")
+// const client=redis.createClient()
 
 
-const client=redis.createClient()
-client.on("error",(err)=>console.log("Redis client error"))
-client.connect()
+// client.on("error",(err)=>console.log("Redis client error"))
+// client.connect()
 
 
-app.use(cors({
-    origin:"*"
-}));
+app.use(cors());
 
 app.use(express.json())
 
