@@ -1,13 +1,12 @@
 const express = require("express")
 const userRouter = express.Router()
+require('dotenv').config()
 const {usermodel } = require("../model/usermodel");
 const {authenticate} = require("../middlewares/authenticate")
 const{authorize}=require("../middlewares/authorize")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
-
 const fs = require("fs")
-require('dotenv').config()
 // const redis = require("redis")
 
 // const client=redis.createClient()
@@ -17,7 +16,9 @@ userRouter.get("/",(req,res)=>{
     res.send("base api endpoint")
 })
 
-
+userRouter.get("/reports",authenticate,authorize("admin"),(req,res)=>{
+	res.send("reports..")
+	})
 
 
 ///////////-------------cookies--------------------//
@@ -60,32 +61,23 @@ userRouter.post("/login", async (req, res) => {
 
     const user = await usermodel.findOne({email})
     if(!user){
-        res.send("Please signup first")
+        res.status(400).send("Please signup first")
+        return
     }
     const hashedpwd = user?.pass
     bcrypt.compare(pass, hashedpwd, function(err, result) {
         if(result){
-            const token = jwt.sign({userID : user._id}, process.env.secretkey, {expiresIn : 20})
-            const refresh_token = jwt.sign({userID : user._id}, process.env.secondkey, {expiresIn : 100})
+            const token = jwt.sign({userID : user._id, role : user.role}, process.env.secretkey, {expiresIn : "1m"})
+            const refresh_token = jwt.sign({userID : user._id}, process.env.secondkey, {expiresIn : "2m"})
             res.send({msg : "login successfull", token, user, refresh_token})
         }
         else{
-            res.send("login failed")
+            res.status(400).send("login failed")
         }
     });
 })
 
-// userRouter.get("/protected",(req,res)=>{
-//     const token = req.headers.authorization;
-//     client.get(token,(err,data)=>{
-//         res.send(data)
-//     })
-// })
 
-
-userRouter.get("/reports",authenticate,(req,res)=>{
-res.send("reports..")
-})
 
 //------blacklisting-----//
 
@@ -109,6 +101,7 @@ userRouter.get("/gettoken",(req,res)=>{
     const reftoken = req.headers.authorization
     if(!reftoken){
         res.status(400).send("Login again!")
+        return
     }
     jwt.verify(reftoken, process.env.secondkey, function(err,decoded) {
         if(err){

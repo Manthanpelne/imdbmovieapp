@@ -16,6 +16,8 @@ movieRouter.get("/",async(req,res)=>{
     }
 })
 
+
+
 movieRouter.get("/display", async (req, res) => {
 	try {
 		const page = parseInt(req.query.page) - 1 || 0;
